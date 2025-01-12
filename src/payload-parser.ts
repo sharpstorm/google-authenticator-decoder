@@ -107,26 +107,28 @@ const readProtobuf = (buf: Uint8Array) => {
   const otpConfigs: OtpParameters[] = [];
 
   // Read OtpParameters structs
-  const { fieldId, type } = readProtobufSectionHeader(reader);
-  if (fieldId === 1) {
-    assertType(type, ProtobufSectionType.LENDELIM);
-    const data = readProtobufLenDelim(reader);
-    otpConfigs.push(decodeOtpParametersStruct(data));
-  } else if (fieldId >= 2 && fieldId <= 5) {
-    assertType(type, ProtobufSectionType.VARINT);
-    const value = Number(reader.readVarInt());
+  while (reader.leftBytes() > 0) {
+    const { fieldId, type } = readProtobufSectionHeader(reader);
+    if (fieldId === 1) {
+      assertType(type, ProtobufSectionType.LENDELIM);
+      const data = readProtobufLenDelim(reader);
+      otpConfigs.push(decodeOtpParametersStruct(data));
+    } else if (fieldId >= 2 && fieldId <= 5) {
+      assertType(type, ProtobufSectionType.VARINT);
+      const value = Number(reader.readVarInt());
 
-    if (fieldId === ProtobufMetadataFields.Version) {
-      metadata.version = value;
-    } else if (fieldId === ProtobufMetadataFields.BatchId) {
-      metadata.batchId = value;
-    } else if (fieldId === ProtobufMetadataFields.BatchIndex) {
-      metadata.batchIndex = value;
-    } else if (fieldId === ProtobufMetadataFields.BatchSize) {
-      metadata.batchSize = value;
+      if (fieldId === ProtobufMetadataFields.Version) {
+        metadata.version = value;
+      } else if (fieldId === ProtobufMetadataFields.BatchId) {
+        metadata.batchId = value;
+      } else if (fieldId === ProtobufMetadataFields.BatchIndex) {
+        metadata.batchIndex = value;
+      } else if (fieldId === ProtobufMetadataFields.BatchSize) {
+        metadata.batchSize = value;
+      }
+    } else {
+      throw new Error('Unknown protobuf fieldId');
     }
-  } else {
-    throw new Error('Unknown protobuf fieldId');
   }
 
   return { metadata, otpConfigs };
