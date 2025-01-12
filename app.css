@@ -1,0 +1,16 @@
+body {
+  width: calc(100%);
+  margin: 0;
+}
+
+#app {
+  width: 100%;
+}
+
+#video-scan-preview {
+  width: 100%;
+}
+
+#div-result {
+  width: 100%;
+}

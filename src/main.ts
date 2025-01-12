@@ -2,13 +2,31 @@ import QrScanner from 'qr-scanner';
 import { getDOMElementById } from './dom-utils';
 
 let isScanning = false;
+let qrScanner: QrScanner | null;
+
+const attachPauseButton = () => {
+  const toggleScanningBtn = getDOMElementById('btn-toggle-scanning');
+  toggleScanningBtn.addEventListener('click', () => {
+    if (!qrScanner) {
+      return;
+    }
+
+    if (isScanning) {
+      qrScanner.stop();
+    } else {
+      qrScanner.start();
+    }
+    isScanning = !isScanning;
+  });
+};
+
 const initQrScanner = () => {
   const videoPreviewElement =
     getDOMElementById<HTMLVideoElement>('video-scan-preview');
-  const toggleScanningBtn = getDOMElementById('btn-toggle-scanning');
+
   const outputDiv = getDOMElementById('div-result');
 
-  const scanner = new QrScanner(
+  qrScanner = new QrScanner(
     videoPreviewElement,
     (result) => {
       console.log(result);
@@ -20,20 +38,19 @@ const initQrScanner = () => {
       },
     },
   );
+  startQrScanner();
+};
 
-  scanner.start();
+const startQrScanner = () => {
+  if (!qrScanner) {
+    return;
+  }
+
+  qrScanner.start();
   isScanning = true;
-
-  toggleScanningBtn.addEventListener('click', () => {
-    if (isScanning) {
-      scanner.stop();
-    } else {
-      scanner.start();
-    }
-    isScanning = !isScanning;
-  });
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+  attachPauseButton();
   initQrScanner();
 });
