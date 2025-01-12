@@ -1,5 +1,6 @@
 import QrScanner from 'qr-scanner';
 import { getDOMElementById } from './dom-utils';
+import { decodeOtpUrl } from './payload-parser';
 
 let isScanning = false;
 let qrScanner: QrScanner | null;
@@ -29,8 +30,16 @@ const initQrScanner = () => {
   qrScanner = new QrScanner(
     videoPreviewElement,
     (result) => {
-      console.log(result);
-      outputDiv.innerText = result.data;
+      const otpUrl = result.data;
+      console.log(otpUrl);
+      outputDiv.textContent = `URL: ${otpUrl}\n\n`;
+      const { otpConfigs } = decodeOtpUrl(otpUrl);
+
+      otpConfigs.forEach((config) => {
+        outputDiv.textContent += `Name: ${config.name}\n`;
+        outputDiv.textContent += `Issuer: ${config.issuer}\n`;
+        outputDiv.textContent += `Secret: ${config.secretBase32}\n\n`;
+      });
     },
     {
       onDecodeError: () => {
