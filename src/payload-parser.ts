@@ -1,5 +1,5 @@
 import { encodeBase32 } from './base32';
-import { BufferReader } from './buffer-reader';
+import { ReadableStream } from './readable-stream';
 import { OtpParameters } from './types';
 
 export const decodeOtpUrl = (url: string) => {
@@ -102,20 +102,23 @@ enum ProtobufSectionType {
 
 // Based on https://github.com/pawitp/protobuf-decoder?tab=readme-ov-file
 const readProtobuf = (buf: Uint8Array) => {
-  const reader = new BufferReader(buf);
+  const readStream = new ReadableStream(buf);
   const metadata: MigrationMetadata = {};
   const otpConfigs: OtpParameters[] = [];
 
   // Read OtpParameters structs
-  while (reader.leftBytes() > 0) {
-    const { fieldId, type } = readProtobufSectionHeader(reader);
+  while (readStream.available() > 0) {
+    const { fieldId, type } = readProtobufSectionHeader(readStream);
     if (fieldId === 1) {
       assertType(type, ProtobufSectionType.LENDELIM);
-      const data = readProtobufLenDelim(reader);
+      const data = readProtobufLenDelim(readStream);
       otpConfigs.push(decodeOtpParametersStruct(data));
-    } else if (fieldId >= 2 && fieldId <= 5) {
+    } else if (
+      fieldId >= ProtobufMetadataFields.Version &&
+      fieldId <= ProtobufMetadataFields.BatchId
+    ) {
       assertType(type, ProtobufSectionType.VARINT);
-      const value = Number(reader.readVarInt());
+      const value = Number(readStream.readVarInt());
 
       if (fieldId === ProtobufMetadataFields.Version) {
         metadata.version = value;
@@ -134,17 +137,17 @@ const readProtobuf = (buf: Uint8Array) => {
   return { metadata, otpConfigs };
 };
 
-const readProtobufSectionHeader = (reader: BufferReader) => {
-  const fieldIdAndType = parseInt(reader.readVarInt().toString());
+const readProtobufSectionHeader = (readStream: ReadableStream) => {
+  const fieldIdAndType = parseInt(readStream.readVarInt().toString());
   const type = fieldIdAndType & 0b111;
   const fieldId = fieldIdAndType >> 3;
 
   return { type, fieldId };
 };
 
-const readProtobufLenDelim = (reader: BufferReader) => {
-  const length = parseInt(reader.readVarInt().toString());
-  const data = reader.readBuffer(length);
+const readProtobufLenDelim = (readStream: ReadableStream) => {
+  const length = parseInt(readStream.readVarInt().toString());
+  const data = readStream.read(length);
   return data;
 };
 
@@ -160,28 +163,28 @@ const decodeOtpParametersStruct = (data: Uint8Array): OtpParameters => {
   let name: string | undefined;
   let issuer: string | undefined;
 
-  const reader = new BufferReader(data);
-  while (reader.leftBytes() > 0) {
-    const { fieldId, type } = readProtobufSectionHeader(reader);
+  const readStream = new ReadableStream(data);
+  while (readStream.available() > 0) {
+    const { fieldId, type } = readProtobufSectionHeader(readStream);
 
     if (fieldId === ProtobufOtpParametersFields.Secret) {
       assertType(type, ProtobufSectionType.LENDELIM);
-      const data = readProtobufLenDelim(reader);
+      const data = readProtobufLenDelim(readStream);
       secret = encodeBase32(data);
     } else if (fieldId === ProtobufOtpParametersFields.Name) {
       assertType(type, ProtobufSectionType.LENDELIM);
-      const data = readProtobufLenDelim(reader);
+      const data = readProtobufLenDelim(readStream);
       name = textDecoder.decode(data);
     } else if (fieldId === ProtobufOtpParametersFields.Issuer) {
       assertType(type, ProtobufSectionType.LENDELIM);
-      const data = readProtobufLenDelim(reader);
+      const data = readProtobufLenDelim(readStream);
       issuer = textDecoder.decode(data);
 
       // For other cases, drain the buffer
     } else if (type === ProtobufSectionType.LENDELIM) {
-      readProtobufLenDelim(reader);
+      readProtobufLenDelim(readStream);
     } else if (type === ProtobufSectionType.VARINT) {
-      reader.readVarInt();
+      readStream.readVarInt();
     }
   }
 

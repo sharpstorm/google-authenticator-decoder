@@ -12,9 +12,13 @@
   <div id="app">
     <video id="video-scan-preview"></video>
     <br /><br />
-    <button id="btn-toggle-scanning">Toggle Scanning</button>
-    <br /><br />
-    <pre id="div-result"></pre>
+    <div id="div-interaction-pane">
+      <button id="btn-toggle-scanning" class="btn">Stop Scanning</button>
+      <br /><br />
+      <div id="div-qr-url"></div>
+      <div id="div-results-container"></div>
+      <pre id="div-debug-log"></pre>
+    </div>
   </div>
   <script type="module" src="/src/main.ts"></script>
 </body>

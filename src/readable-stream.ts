@@ -22,15 +22,13 @@ const decodeVarint = (buffer: Uint8Array, offset: number) => {
   };
 };
 
-export class BufferReader {
+export class ReadableStream {
   private readonly buffer: Uint8Array;
   offset: number;
-  savedOffset: number;
 
   constructor(buffer: Uint8Array) {
     this.buffer = buffer;
     this.offset = 0;
-    this.savedOffset = 0;
   }
 
   readVarInt() {
@@ -40,7 +38,7 @@ export class BufferReader {
     return result.value;
   }
 
-  readBuffer(length: number) {
+  read(length: number) {
     this.checkByte(length);
     const result = this.buffer.slice(this.offset, this.offset + length);
     this.offset += length;
@@ -48,12 +46,12 @@ export class BufferReader {
     return result;
   }
 
-  leftBytes() {
+  available() {
     return this.buffer.length - this.offset;
   }
 
   private checkByte(length: number) {
-    const bytesAvailable = this.leftBytes();
+    const bytesAvailable = this.available();
     if (length > bytesAvailable) {
       throw new Error(
         'Not enough bytes left. Requested: ' +
@@ -62,13 +60,5 @@ export class BufferReader {
           bytesAvailable,
       );
     }
-  }
-
-  saveCheckpoint() {
-    this.savedOffset = this.offset;
-  }
-
-  resetToCheckpoint() {
-    this.offset = this.savedOffset;
   }
 }
