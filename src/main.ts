@@ -31,11 +31,7 @@ const initQrScanner = () => {
   const videoPreviewElement =
     getDOMElementById<HTMLVideoElement>('video-scan-preview');
 
-  qrScanner = new QrScanner(videoPreviewElement, handleQrScanResult, {
-    onDecodeError: () => {
-      logDebug('Error occurred during decode');
-    },
-  });
+  qrScanner = new QrScanner(videoPreviewElement, handleQrScanResult, {});
 
   qrScanner.start();
   isScanning = true;
