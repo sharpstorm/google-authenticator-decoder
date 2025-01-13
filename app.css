@@ -21,6 +21,7 @@ body {
 
 #div-qr-url {
   width: 100%;
+  overflow-wrap: anywhere;
 }
 
 .btn {

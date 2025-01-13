@@ -38,6 +38,7 @@ const initQrScanner = () => {
 };
 
 const handleQrScanResult = (result: QrScanner.ScanResult) => {
+  clearResults();
   const qrUrlDiv = getDOMElementById('div-qr-url');
 
   const otpUrl = result.data;
@@ -83,7 +84,7 @@ const addResultRow = ({
       'div',
       { className: 'result-metadata' },
       makeNode('strong', {}, issuer),
-      name,
+      ` (${name})`,
     ),
     makeNode('div', { className: 'result-secret' }, secretBase32),
   );
