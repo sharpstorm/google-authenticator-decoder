@@ -15,11 +15,11 @@ const attachPauseButton = () => {
     if (isScanning) {
       qrScanner.stop();
       toggleScanningBtn.textContent = 'Start Scanning';
-
+    } else {
       // Clear everything
       clearResults();
       clearDebugLogs();
-    } else {
+
       qrScanner.start();
       toggleScanningBtn.textContent = 'Stop Scanning';
     }

@@ -22,6 +22,7 @@ body {
 #div-qr-url {
   width: 100%;
   overflow-wrap: anywhere;
+  margin-bottom: 0.5rem;
 }
 
 .btn {
